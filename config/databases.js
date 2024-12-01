@@ -5,7 +5,7 @@ const node1 = mysql.createPool({
     port: 22072,
     user: "remote_user",
     password: "123",
-    database: "steamgames_dw"
+    database: "central_db"
 });
 
 const node2 = mysql.createPool({
@@ -24,4 +24,28 @@ const node3 = mysql.createPool({
     database: "steamgames_2020onwards"
 });
 
-module.exports = { node1, node2, node3 };
+const node_utils = {
+    pingNode: async function (n) {
+        
+        try {
+            const [rows, fields] = await nodes[n - 1].query(`SELECT 1`);
+            return true;
+        }
+        catch (err) {
+            console.log(`Error: Node ${n} is not available`);
+            return false;
+        }
+    },
+
+    getConnection: async function(n) {
+        switch (n) {
+            case 1: return await node1.getConnection();
+            case 2: return await node2.getConnection();
+            case 3: return await node3.getConnection();
+        }
+    }
+}
+
+
+
+module.exports = { node1, node2, node3, node_utils };
