@@ -29,9 +29,6 @@
                         <th>Mac</th>
                         <th>Linux</th>
                         <th>Metacritic Score</th>
-                        <th>Genres</th>
-                        <th>Developer(s)</th>
-                        <th>Publisher(s)</th>
                         <th>Edit</th>
                     </tr>
                 </thead>
@@ -47,15 +44,6 @@
                             <td><%= game.mac ? 'Yes' : 'No' %></td>
                             <td><%= game.linux ? 'Yes' : 'No' %></td>
                             <td><%= game.metacritic_score %></td>
-                            <td>
-                                <%= game.genres ? game.genres.split(',').join(', ') : 'None' %>
-                            </td>
-                            <td>
-                                <%= game.developers ? game.developers.split(',').join(', ') : 'None' %>
-                            </td>
-                            <td>
-                                <%= game.publishers ? game.publishers.split(',').join(', ') : 'None' %>
-                            </td>
                             <td>
                                 <a href="/editGame?id=<%= game.app_id %>"><button class="btn btn-primary">Edit</button></a>
                             </td>

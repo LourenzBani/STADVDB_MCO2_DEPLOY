@@ -17,17 +17,8 @@ app.get('/', async (req, res) => {
         const offset = (currentPage - 1) * itemsPerPage;
 
         const query = `
-            SELECT g.*, 
-                GROUP_CONCAT(DISTINCT ge.genre_name) AS genres,
-                GROUP_CONCAT(DISTINCT dev.developer_name) AS developers,
-                GROUP_CONCAT(DISTINCT pub.publisher_name) AS publishers
+            SELECT *
             FROM games g
-            LEFT JOIN game_genres ge ON g.app_id = ge.app_id
-            LEFT JOIN game_developers gd ON g.app_id = gd.app_id
-            LEFT JOIN developers dev ON gd.developer_id = dev.developer_id
-            LEFT JOIN game_publishers gp ON g.app_id = gp.app_id
-            LEFT JOIN publishers pub ON gp.publisher_id = pub.publisher_id
-            GROUP BY g.app_id
             LIMIT ? OFFSET ?
         `;
 
@@ -69,19 +60,18 @@ app.get('/editGame', async (req, res) => {
 
 // Route to handle game update
 app.post('/updateGame', async (req, res) => {
-    const { app_id, name, release_year, price, genres, windows, mac, linux } = req.body;
+    const { app_id, name, release_year, price, windows, mac, linux } = req.body;
     
     try {
         await node1.query(
-            `UPDATE games SET name = ?, release_date_year = ?, price = ?, genres = ?, windows = ?, mac = ?, linux = ? WHERE app_id = ?`,
-            [name, release_year, price, genres, windows, mac, linux, app_id]
+            `UPDATE games SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ? WHERE app_id = ?`,
+            [name, release_year, price, windows, mac, linux, app_id]
         );
-
-        res.redirect('/');
     } catch (error) {
         console.error('Error updating game:', error);
         res.status(500).send('Server error');
     }
+    
 });
 
 

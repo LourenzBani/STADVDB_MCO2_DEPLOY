@@ -30,10 +30,6 @@
                     <input type="text" class="form-control" id="price" name="price" value="<%= game.price %>" required>
                 </div>
                 <div class="mb-3">
-                    <label for="genres" class="form-label">Genres</label>
-                    <input type="text" class="form-control" id="genres" name="genres" value="<%= game.genres %>" required>
-                </div>
-                <div class="mb-3">
                     <label for="windows" class="form-label">Windows Support</label>
                     <select class="form-control" id="windows" name="windows" required>
                         <option value="1" <%= game.windows ? 'selected' : '' %>>Yes</option>
