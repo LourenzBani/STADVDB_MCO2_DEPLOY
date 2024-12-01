@@ -1,7 +1,11 @@
 const { node1, node2, node3 } = require('../config/databases'); 
 
 async function insertGame(gameData) {
-    const { app_id, name, release_year, price, windows, mac, linux } = gameData;
+    const { name, release_year, price, windows, mac, linux } = gameData;
+
+
+    const result = await node1.query('SELECT MAX(app_id) AS max_app_id FROM games');
+    const app_id = result[0].max_app_id + 1; // Increment the max
 
     // Log the insert into the correct query log in Node 1 (Centralized Node)
     if (release_year < 2020) {
