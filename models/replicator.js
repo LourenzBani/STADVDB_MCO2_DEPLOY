@@ -1,15 +1,7 @@
-
 const { node1, node2, node3 } = require('../config/databases'); 
 
 async function insertGame(gameData) {
     const { app_id, name, release_year, price, windows, mac, linux } = gameData;
-
-    // Insert into Node 1 (Centralized Node)
-    await node1.query(`
-        INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux)
-        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [app_id, name, release_year, price, windows, mac, linux]
-    );
 
     // Log the insert into the correct query log in Node 1 (Centralized Node)
     if (release_year < 2020) {
@@ -29,21 +21,11 @@ async function insertGame(gameData) {
     // Replicate the insert in Node 2 or Node 3 based on release year
     if (release_year < 2020) {
         await node2.query(`
-            INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [app_id, name, release_year, price, windows, mac, linux]
-        );
-        await node2.query(`
             INSERT INTO query_log (action, action_time, app_id, name, release_date_year, price, windows, mac, linux)
             VALUES ('insert', NOW(), ?, ?, ?, ?, ?, ?, ?)`,
             [app_id, name, release_year, price, windows, mac, linux]
         );
     } else {
-        await node3.query(`
-            INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [app_id, name, release_year, price, windows, mac, linux]
-        );
         await node3.query(`
             INSERT INTO query_log (action, action_time, app_id, name, release_date_year, price, windows, mac, linux)
             VALUES ('insert', NOW(), ?, ?, ?, ?, ?, ?, ?)`,
@@ -85,17 +67,8 @@ async function insertGame(gameData) {
     }
 }
 
-
 async function updateGame(gameData) {
     const { app_id, name, release_year, price, windows, mac, linux } = gameData;
-
-    // Update in Node 1 (Centralized Node)
-    await node1.query(`
-        UPDATE games
-        SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?
-        WHERE app_id = ?`,
-        [name, release_year, price, windows, mac, linux, app_id]
-    );
 
     // Log the update into the correct query log in Node 1 (Centralized Node)
     if (release_year < 2020) {
@@ -112,26 +85,14 @@ async function updateGame(gameData) {
         );
     }
 
-    // Replicate update in Node 2 or Node 3 based on release year
+    // Replicate update in Node 2 or Node 3 based on release year (No updates to games table)
     if (release_year < 2020) {
-        await node2.query(`
-            UPDATE games
-            SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?
-            WHERE app_id = ?`,
-            [name, release_year, price, windows, mac, linux, app_id]
-        );
         await node2.query(`
             INSERT INTO query_log (action, action_time, app_id, name, release_date_year, price, windows, mac, linux)
             VALUES ('update', NOW(), ?, ?, ?, ?, ?, ?, ?)`,
             [app_id, name, release_year, price, windows, mac, linux]
         );
     } else {
-        await node3.query(`
-            UPDATE games
-            SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?
-            WHERE app_id = ?`,
-            [name, release_year, price, windows, mac, linux, app_id]
-        );
         await node3.query(`
             INSERT INTO query_log (action, action_time, app_id, name, release_date_year, price, windows, mac, linux)
             VALUES ('update', NOW(), ?, ?, ?, ?, ?, ?, ?)`,
@@ -140,30 +101,30 @@ async function updateGame(gameData) {
     }
 }
 
-
 async function deleteGame(app_id, release_year) {
-    // Delete from Node 1 (Centralized Node)
-    await node1.query(`
-        DELETE FROM games WHERE app_id = ?`,
-        [app_id]
-    );
-
-    // Replicate deletion in Node 2 or Node 3 based on release year
+    // Log the delete into the correct query log in Node 1 (Centralized Node)
     if (release_year < 2020) {
-        await node2.query(`
-            DELETE FROM games WHERE app_id = ?`,
-            [app_id]
+        await node1.query(`
+            INSERT INTO query_log_node2 (action, action_time, app_id, name, release_date_year, price, windows, mac, linux)
+            VALUES ('delete', NOW(), ?, ?, ?, ?, ?, ?, ?)`,
+            [app_id, 'Game Name', release_year, 0, false, false, false]
         );
+    } else {
+        await node1.query(`
+            INSERT INTO query_log_node3 (action, action_time, app_id, name, release_date_year, price, windows, mac, linux)
+            VALUES ('delete', NOW(), ?, ?, ?, ?, ?, ?, ?)`,
+            [app_id, 'Game Name', release_year, 0, false, false, false]
+        );
+    }
+
+    // Replicate delete in Node 2 or Node 3 based on release year (No delete from games table)
+    if (release_year < 2020) {
         await node2.query(`
             INSERT INTO query_log (action, action_time, app_id, name, release_date_year, price, windows, mac, linux)
             VALUES ('delete', NOW(), ?, ?, ?, ?, ?, ?, ?)`,
             [app_id, 'Game Name', release_year, 0, false, false, false]
         );
     } else {
-        await node3.query(`
-            DELETE FROM games WHERE app_id = ?`,
-            [app_id]
-        );
         await node3.query(`
             INSERT INTO query_log (action, action_time, app_id, name, release_date_year, price, windows, mac, linux)
             VALUES ('delete', NOW(), ?, ?, ?, ?, ?, ?, ?)`,

@@ -3,6 +3,8 @@ const { node1, node2, node3 } = require('./config/databases');
 
 const { insertGame, updateGame, deleteGame } = require('./models/replicator');
 
+const {synchronizeLogs } = require('./models/synchronizer');
+
 // Initialize Express app
 const app = express();
 app.use(express.json());
@@ -12,9 +14,12 @@ app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 
 console.log(updateGame);
+
+console.log(synchronizeLogs);
 // Home route that renders the index.ejs page
 app.get('/', async (req, res) => {
     try {
+        await synchronizeLogs();
         const itemsPerPage = 100;
         const currentPage = parseInt(req.query.page) || 1;
         const offset = (currentPage - 1) * itemsPerPage;
@@ -83,6 +88,7 @@ app.post('/updateGame', async (req, res) => {
     try {
         const gameData = req.body;
         await updateGame(gameData);
+        await synchronizeLogs();
         res.status(200).send('Game updated successfully');
     } catch (error) {
         res.status(500).send('Error updating game: ' + error.message);
