@@ -68,29 +68,29 @@ async function insertGame(gameData) {
 
 
 async function updateGame(gameData) {
-    const { app_id, name, release_year, price, windows, mac, linux } = gameData;
+    const { app_id, name, release_year, price, windows, mac, linux, metacritic_score } = gameData;
 
     // Update in Node 1 (Centralized Node)
     await node1.query(`
         UPDATE games
-        SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?
+        SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?, metacritic_score = ?
         WHERE app_id = ?`,
-        [name, release_year, price, windows, mac, linux, app_id]
+        [name, release_year, price, windows, mac, linux, app_id, metacritic_score]
     );
 
     // Log the update into the correct query log in Node 1 (Centralized Node)
     const logTable = release_year < 2020 ? 'query_log_node2' : 'query_log_node3';
-    await logAction(node1, logTable, 'update', app_id, name, release_year, price, windows, mac, linux);
+    await logAction(node1, logTable, 'update', app_id, name, release_year, price, windows, mac, linux, metacritic_score);
 
     // Replicate update in Node 2 or Node 3 based on release year
     const targetNode = release_year < 2020 ? node2 : node3;
     await replicateData(targetNode, `
         UPDATE games
-        SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?
+        SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?, metacritic_score = ?
         WHERE app_id = ?`,
-        [name, release_year, price, windows, mac, linux, app_id]
+        [name, release_year, price, windows, mac, linux, app_id, metacritic_score]
     );
-    await logAction(targetNode, 'query_log', 'update', app_id, name, release_year, price, windows, mac, linux);
+    await logAction(targetNode, 'query_log', 'update', app_id, name, release_year, price, windows, mac, linux, metacritic_score);
 }
 
 

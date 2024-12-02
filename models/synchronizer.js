@@ -2,54 +2,54 @@ const { node1, node2, node3 } = require('../config/databases');
 
 // Helper function to perform the action on the corresponding node
 async function performAction(action, log) {
-    const { app_id, name, release_date_year, price, windows, mac, linux } = log;
+    const { app_id, name, release_date_year, price, windows, mac, linux, metacritic_score} = log;
 
     try {
         if (action === 'insert') {
             // Insert the game data into the corresponding node
             if (release_date_year < 2020) {
                 await node2.query(`
-                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)`, 
-                    [app_id, name, release_date_year, price, windows, mac, linux]);
+                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, 
+                    [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
                 await node1.query(`
-                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)`, 
-                    [app_id, name, release_date_year, price, windows, mac, linux]);
+                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, 
+                    [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
             } else {
                 await node3.query(`
-                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)`, 
-                    [app_id, name, release_date_year, price, windows, mac, linux]);
+                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, 
+                    [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
                 await node1.query(`
-                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)`, 
-                    [app_id, name, release_date_year, price, windows, mac, linux]);
+                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, 
+                    [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
             }
         } else if (action === 'update') {
             // Update the game data in the corresponding node
             if (release_date_year < 2020) {
                 await node2.query(`
                     UPDATE games 
-                    SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?
+                    SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?, metacritic_score = ?
                     WHERE app_id = ?`, 
-                    [name, release_date_year, price, windows, mac, linux, app_id]);
+                    [name, release_date_year, price, windows, mac, linux, metacritic_score, app_id]);
                 await node1.query(`
                     UPDATE games 
-                    SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?
+                    SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?, metacritic_score = ?
                     WHERE app_id = ?`, 
-                    [name, release_date_year, price, windows, mac, linux, app_id]);
+                    [name, release_date_year, price, windows, mac, linux, metacritic_score, app_id]);
             } else {
                 await node3.query(`
                     UPDATE games 
-                    SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?
+                    SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?, metacritic_score = ?
                     WHERE app_id = ?`, 
-                    [name, release_date_year, price, windows, mac, linux, app_id]);
+                    [name, release_date_year, price, windows, mac, linux, metacritic_score, app_id]);
                 await node1.query(`
                     UPDATE games 
-                    SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?
+                    SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?, metacritic_score = ?
                     WHERE app_id = ?`, 
-                    [name, release_date_year, price, windows, mac, linux, app_id]);
+                    [name, release_date_year, price, windows, mac, linux, metacritic_score, app_id]);
             }
         } else if (action === 'delete') {
             // Delete the game data from the corresponding node
