@@ -1,6 +1,14 @@
 const { node1, node2, node3 } = require('../config/databases');
 const { logAction, replicateData } = require('./helpers');
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function setIsolationLevel(connection, level) {
+    await connection.query(`SET TRANSACTION ISOLATION LEVEL ${level}`);
+}
+
 // Helper function to perform the action on the corresponding node
 async function performAction(action, log) {
     const { app_id, name, release_date_year, price, windows, mac, linux, metacritic_score} = log;
@@ -9,12 +17,13 @@ async function performAction(action, log) {
     try {
         // Start a transaction
         connection = await node1.getConnection();
+        await setIsolationLevel(connection, 'READ COMMITTED'); // dont forget to comment out comit stt to simulate dirty read
         await connection.beginTransaction(); // Start transaction
 
         if (action === 'insert') {
             // Insert the game data into the corresponding node
             if (release_date_year < 2020) {
-                await connection.query(`
+                const result = await connection.query(`
                     INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                     [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
@@ -22,26 +31,39 @@ async function performAction(action, log) {
                     INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                     [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
+                console.log('Insert Result:', result);
             } else {
+                const result = await connection.query(`
+                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
                 await node3.query(`
                     INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                     [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
+                console.log('Insert Result:', result);
             }
         } else if (action === 'update') {
             // Update the game data in the corresponding node
             if (release_date_year < 2020) {
-                await connection.query(`
+                const result = await connection.query(`
                     UPDATE games 
                     SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?, metacritic_score = ?
                     WHERE app_id = ?`,
                     [name, release_date_year, price, windows, mac, linux, metacritic_score, app_id]);
+                    console.log('Update Result:', result);
                 await node2.query(`
                     UPDATE games 
                     SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?, metacritic_score = ?
                     WHERE app_id = ?`,
                     [name, release_date_year, price, windows, mac, linux, metacritic_score, app_id]);
             } else {
+                const result = await connection.query(`
+                    UPDATE games 
+                    SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?, metacritic_score = ?
+                    WHERE app_id = ?`,
+                    [name, release_date_year, price, windows, mac, linux, metacritic_score, app_id]);
+                    console.log('Update Result:', result);
                 await node3.query(`
                     UPDATE games 
                     SET name = ?, release_date_year = ?, price = ?, windows = ?, mac = ?, linux = ?, metacritic_score = ?
@@ -58,6 +80,9 @@ async function performAction(action, log) {
                     DELETE FROM games WHERE app_id = ?`,
                     [app_id]);
             } else {
+                await connection.query(`
+                    DELETE FROM games WHERE app_id = ?`,
+                    [app_id]);
                 await node3.query(`
                     DELETE FROM games WHERE app_id = ?`,
                     [app_id]);
@@ -65,8 +90,9 @@ async function performAction(action, log) {
         }
 
         // Update the logs table in the corresponding node
-        await syncLogsTable(action, log, connection, 'query_log');
+        //await syncLogsTable(action, log, connection, 'query_log');
 
+        await sleep(10000); 
         // Commit the transaction if all operations succeed
         await connection.commit();
         console.log(`Action ${action} for app_id ${app_id} successfully committed.`);
@@ -109,6 +135,11 @@ async function synchronizeLogs() {
         const [logsFromNode1Node3] = await node1.query('SELECT * FROM query_log_node3');
         const [logsFromNode2] = await node2.query('SELECT * FROM query_log');
         const [logsFromNode3] = await node3.query('SELECT * FROM query_log');
+
+        console.log('Logs from Node 1 (query_log_node2):', logsFromNode1Node2.length);
+        console.log('Logs from Node 2 (query_log):', logsFromNode2.length);
+        console.log('Logs from Node 1 (query_log_node3):', logsFromNode1Node3.length);
+        console.log('Logs from Node 3 (query_log):', logsFromNode3.length);
 
         // Check if the logs differ in count before syncing
         if (logsFromNode1Node2.length > logsFromNode2.length) {
@@ -180,7 +211,6 @@ async function synchronizeLogs() {
         console.error('Error during synchronization:', error);
     }
 }
-
 
 
 

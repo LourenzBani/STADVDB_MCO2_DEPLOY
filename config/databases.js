@@ -5,7 +5,12 @@ const node1 = mysql.createPool({
     port: 22072,
     user: "remote_user",
     password: "123",
-    database: "central_db"
+    database: "central_db",
+    waitForConnections: true,
+    connectionLimit: 10,
+    maxIdle: 10, 
+    idleTimeout: 60000, 
+    queueLimit: 0
 });
 
 const node2 = mysql.createPool({
@@ -13,7 +18,12 @@ const node2 = mysql.createPool({
     port: 22082,
     user: "user",
     password: "password",
-    database: "steamgames_2020before"
+    database: "steamgames_2020before",
+    waitForConnections: true,
+    connectionLimit: 10,
+    maxIdle: 10, 
+    idleTimeout: 60000, 
+    queueLimit: 0
 });
 
 const node3 = mysql.createPool({
@@ -21,7 +31,12 @@ const node3 = mysql.createPool({
     user: "user",
     port: 22092,
     password: "password",
-    database: "steamgames_2020onwards"
+    database: "steamgames_2020onwards",
+    waitForConnections: true,
+    connectionLimit: 10,
+    maxIdle: 10, 
+    idleTimeout: 60000, 
+    queueLimit: 0
 });
 
 const node_utils = {

@@ -8,6 +8,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 
+async function setIsolationLevel(connection, level) {
+    await connection.query(`SET SESSION TRANSACTION ISOLATION LEVEL ${level}`);
+}
+
 app.get('/', async (req, res) => {
     try {
         await synchronizeLogs();
@@ -81,8 +85,11 @@ app.post('/addGame', async (req, res) => {
 });
 
 app.get('/editGame', async (req, res) => {
+    const connection = await node2.getConnection();
     try {
         const gameId = req.query.id;
+        await setIsolationLevel(connection, 'READ UNCOMMITTED');
+        await connection.beginTransaction();
         const [game] = await node2.query('SELECT * FROM games WHERE app_id = ?', [gameId]);
         if (!game) {
             return res.status(404).send('Game not found');
@@ -98,6 +105,7 @@ app.post('/updateGame', async (req, res) => {
     try {
         const gameData = req.body;
         await updateGame(gameData);
+        sleep(10000);
         await synchronizeLogs();
         res.status(200).send('Game updated successfully');
     } catch (error) {
