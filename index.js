@@ -148,7 +148,7 @@ app.get('/deleteGame/:id', async (req, res) => {
 
 
 // Listen on the specified port
-const PORT = 9000;
+const PORT = 9001;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

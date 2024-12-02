@@ -23,6 +23,7 @@ async function insertGame(gameData) {
     // Log the insert into the correct query log in Node 1 (Centralized Node)
     const logTable = release_date_year < 2020 ? 'query_log_node2' : 'query_log_node3';
     await logAction(node1, logTable, 'insert', app_id, name, release_date_year, price, windows, mac, linux, metacritic_score);
+    await logAction(targetNode, 'query_log', 'insert', app_id, name, release_date_year, price, windows, mac, linux, metacritic_score);
 
 
     // Replicate the insert in Node 2 or Node 3 based on release year
