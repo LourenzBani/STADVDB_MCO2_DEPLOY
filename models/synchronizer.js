@@ -21,27 +21,66 @@ async function performAction(action, log) {
         await connection.beginTransaction(); // Start transaction
 
         if (action === 'insert') {
+            // Check if the app_id already exists
+            const [existingRecordNode1] = await connection.query(`SELECT app_id FROM games WHERE app_id = ?`, [app_id]);
+            const [existingRecordNode2] = await node2.query(`SELECT app_id FROM games WHERE app_id = ?`, [app_id]);
+            const [existingRecordNode3] = await node3.query(`SELECT app_id FROM games WHERE app_id = ?`, [app_id]);
+
             // Insert the game data into the corresponding node
             if (release_date_year < 2020) {
-                const result = await connection.query(`
-                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
-                await node2.query(`
-                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
-                console.log('Insert Result:', result);
+                if(existingRecordNode1.length > 0){
+                    await node2.query(
+                        `INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]
+                    );
+                }else if(existingRecordNode2.length > 0){
+                    const result = await connection.query(
+                        `INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]
+                    );
+                    console.log('Insert Result:', result);
+                }else{
+                    const result = await connection.query(
+                        `INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]
+                    );
+                    await node2.query(
+                        `INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]
+                    );
+                    console.log('Insert Result:', result);
+                }
             } else {
-                const result = await connection.query(`
-                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
-                await node3.query(`
-                    INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]);
-                console.log('Insert Result:', result);
+                if(existingRecordNode1.length > 0){
+                    await node3.query(
+                        `INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]
+                    );
+                }else if(existingRecordNode3.length > 0){
+                    const result = await connection.query(
+                        `INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]
+                    );
+                    console.log('Insert Result:', result);
+                }else{
+                    const result = await connection.query(
+                        `INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]
+                    );
+                    await node3.query(
+                        `INSERT INTO games (app_id, name, release_date_year, price, windows, mac, linux, metacritic_score)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [app_id, name, release_date_year, price, windows, mac, linux, metacritic_score]
+                    );
+                    console.log('Insert Result:', result);
+                }
             }
         } else if (action === 'update') {
             // Update the game data in the corresponding node

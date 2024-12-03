@@ -14,7 +14,7 @@ const retryQueues = {
     node3: [],
 };
 
-async function isNodeAvailable(nodeName) {
+async function isNodeAvailable(nodeName,node) {
     try {
         const isAvailable = nodeStatus[nodeName]; // You can use the actual check here
         if (!isAvailable) {
@@ -22,7 +22,7 @@ async function isNodeAvailable(nodeName) {
         }
 
         // Example for a MySQL node
-        const result = await node1.query('SELECT 1'); // A simple query to test the connection
+        const result = await node.query('SELECT 1'); // A simple query to test the connection
         if (result) {
             return true; // Node is available
         } else {
@@ -37,7 +37,7 @@ async function isNodeAvailable(nodeName) {
 
 // Retry queued actions for a node
 async function processRetryQueue(node, nodeName, table) {
-    if (await isNodeAvailable(nodeName) && retryQueues[nodeName].length > 0) { // Await the availability check
+    if (await isNodeAvailable(nodeName,node) && retryQueues[nodeName].length > 0) { // Await the availability check
         console.log(`Processing retry queue for ${nodeName}...`);
         const retryQueue = [...retryQueues[nodeName]]; 
         retryQueues[nodeName] = []; 
@@ -59,7 +59,7 @@ async function processRetryQueue(node, nodeName, table) {
 async function logAction(node, nodeName, table, action, app_id, name, release_date_year, price, windows, mac, linux, metacritic_score) {
     const log = [action, app_id, name, release_date_year, price, windows, mac, linux, metacritic_score];
 
-    if (!(await isNodeAvailable(nodeName))) { // Await the availability check
+    if (!(await isNodeAvailable(nodeName,node))) { // Await the availability check
         console.error(`Node ${nodeName} is unavailable. Storing log action in retry queue.`);
         console.log(`Action being pushed to retry queue for ${nodeName}:`, log);
         retryQueues[nodeName].push(log); // Push to retry queue
@@ -92,4 +92,4 @@ async function replicateData(node, query, params) {
     await node.query(query, params);
 }
 
-module.exports = { logAction, updateNodeStatus, processRetryQueue, replicateData };
+module.exports = { logAction, updateNodeStatus, processRetryQueue, replicateData, isNodeAvailable };

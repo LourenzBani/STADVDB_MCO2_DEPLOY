@@ -28,7 +28,12 @@ async function isNodeAvailable(node) {
 app.get('/', async (req, res) => {
     try {
         await processRetryQueue(node3, 'node3', 'query_log');
-        await synchronizeLogs();
+        const isNode1Available = await isNodeAvailable(node1);
+        if (!isNode1Available) {
+            console.error('Node 1 is unavailable. Cannot synchronize logs.');
+        }else{
+            await synchronizeLogs();
+        }
         const itemsPerPage = 100;
         const currentPage = parseInt(req.query.page) || 1;
         const offset = (currentPage - 1) * itemsPerPage;
@@ -90,10 +95,15 @@ app.post('/addGame', async (req, res) => {
         const { name, release_date_year, price, windows, mac, linux, metacritic_score } = req.body;
         const gameData = { name, release_date_year, price, windows, mac, linux, metacritic_score };
         await insertGame(gameData);
+        const isNode1Available = await isNodeAvailable(node1);
         const isNode3Available = await isNodeAvailable(node3);
         if (!isNode3Available) {
-            console.error('Node 3 is unavailable. Cannot synchronize logs.');
-            return res.status(500).send('Node 3 is unavailable. Wait for the server to run again.');
+            console.error('Node 2 is unavailable. Cannot synchronize logs.');
+            return res.status(500).send('Node 2 is unavailable. Wait for the server to run again.');
+        }
+        if (!isNode1Available) {
+            console.error('Node 1 is unavailable. Cannot synchronize logs.');
+            return res.status(500).send('Node 1 is unavailable. Wait for the server to run again.');
         }
         await synchronizeLogs();
         res.status(200).send({ message: 'Game added successfully' });
@@ -124,10 +134,15 @@ app.post('/updateGame', async (req, res) => {
     try {
         const gameData = req.body;
         await updateGame(gameData);
+        const isNode1Available = await isNodeAvailable(node1);
         const isNode3Available = await isNodeAvailable(node3);
         if (!isNode3Available) {
-            console.error('Node 3 is unavailable. Cannot synchronize logs.');
-            return res.status(500).send('Node 3 is unavailable. Wait for the server to run again.');
+            console.error('Node 2 is unavailable. Game Updated in this Node but failed to replicate.');
+            return res.status(500).send('Node 2 is unavailable. Game Updated in this Node but failed to replicate.');
+        }
+        if (!isNode1Available) {
+            console.error('Node 1 is unavailable. Game Updated in this Node but failed to replicate.');
+            return res.status(500).send('Node 1 is unavailable. Game Updated in this Node but failed to replicate.');
         }
         await synchronizeLogs();
         return res.status(200).send('Game updated successfully');
@@ -145,10 +160,15 @@ app.get('/deleteGame/:id', async (req, res) => {
         }
         const release_year = game[0].release_date_year;
         await deleteGame(app_id, release_year);
+        const isNode1Available = await isNodeAvailable(node1);
         const isNode3Available = await isNodeAvailable(node3);
         if (!isNode3Available) {
-            console.error('Node 3 is unavailable. Cannot synchronize logs.');
-            return res.status(500).send('Node 3 is unavailable. Wait for the server to run again.');
+            console.error('Node 2 is unavailable. Cannot synchronize logs.');
+            return res.status(500).send('Node 2 is unavailable. Wait for the server to run again.');
+        }
+        if (!isNode1Available) {
+            console.error('Node 1 is unavailable. Cannot synchronize logs.');
+            return res.status(500).send('Node 1 is unavailable. Wait for the server to run again.');
         }
         await synchronizeLogs();
         res.status(200).send({ message: 'Game successfully deleted' });

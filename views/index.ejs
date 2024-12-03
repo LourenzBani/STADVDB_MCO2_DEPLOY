@@ -179,8 +179,9 @@
                     location.reload(); // Reload the page to show the new record
                 },
                 error: function (error) {
-                    alert('Error adding game');
+                    alert('Error adding game to all nodes, Some Nodes might not be working! But Game is added to this node');
                     console.error(error);
+                    location.reload();
                 }
             });
         });
@@ -197,8 +198,9 @@
                         location.reload(); // Reload the page to reflect the changes
                     },
                     error: function (error) {
-                        alert('Error deleting game');
+                        alert('Error deleting game from other nodes, Some Nodes might not be working! But Game is deleted in this node');
                         console.error(error);
+                        location.reload();
                     }
                 });
             }
