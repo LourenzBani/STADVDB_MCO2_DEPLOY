@@ -13,9 +13,20 @@ async function setIsolationLevel(connection, level) {
     await connection.query(`SET SESSION TRANSACTION ISOLATION LEVEL ${level}`);
 }
 
+// Function to check if the node is available (you can define this according to your actual node check logic)
+async function isNodeAvailable(node) {
+    try {
+        const result = await node.query('SELECT 1');
+        return result !== null;
+    } catch (error) {
+        console.error(`Error checking node availability: ${error.message}`);
+        return false; // If an error occurs, the node is unavailable
+    }
+}
+
+
 app.get('/', async (req, res) => {
     try {
-        await processRetryQueue(node3, 'node3', 'query_log');
         await processRetryQueue(node3, 'node3', 'query_log');
         await synchronizeLogs();
         const itemsPerPage = 100;
@@ -79,12 +90,12 @@ app.post('/addGame', async (req, res) => {
         const { name, release_date_year, price, windows, mac, linux, metacritic_score } = req.body;
         const gameData = { name, release_date_year, price, windows, mac, linux, metacritic_score };
         await insertGame(gameData);
-        try {
-            await synchronizeLogs();
-        } catch (error) {
-            console.error('Error during synchronization:', error.message);
-            return res.status(500).send('Error during synchronization: ' + error.message);
+        const isNode3Available = await isNodeAvailable(node3);
+        if (!isNode3Available) {
+            console.error('Node 3 is unavailable. Cannot synchronize logs.');
+            return res.status(500).send('Node 3 is unavailable. Wait for the server to run again.');
         }
+        await synchronizeLogs();
         res.status(200).send({ message: 'Game added successfully' });
     } catch (error) {
         console.error('Error adding game:', error);
@@ -113,12 +124,12 @@ app.post('/updateGame', async (req, res) => {
     try {
         const gameData = req.body;
         await updateGame(gameData);
-        try {
-            await synchronizeLogs();
-        } catch (error) {
-            console.error('Error during synchronization:', error.message);
-            return res.status(500).send('Error during synchronization: ' + error.message);
+        const isNode3Available = await isNodeAvailable(node3);
+        if (!isNode3Available) {
+            console.error('Node 3 is unavailable. Cannot synchronize logs.');
+            return res.status(500).send('Node 3 is unavailable. Wait for the server to run again.');
         }
+        await synchronizeLogs();
         return res.status(200).send('Game updated successfully');
     } catch (error) {
         return res.status(500).send('Error updating game: ' + error.message);
@@ -134,12 +145,12 @@ app.get('/deleteGame/:id', async (req, res) => {
         }
         const release_year = game[0].release_date_year;
         await deleteGame(app_id, release_year);
-        try {
-            await synchronizeLogs();
-        } catch (error) {
-            console.error('Error during synchronization:', error.message);
-            res.status(500).send('Error during synchronization: ' + error.message);
+        const isNode3Available = await isNodeAvailable(node3);
+        if (!isNode3Available) {
+            console.error('Node 3 is unavailable. Cannot synchronize logs.');
+            return res.status(500).send('Node 3 is unavailable. Wait for the server to run again.');
         }
+        await synchronizeLogs();
         res.status(200).send({ message: 'Game successfully deleted' });
     } catch (error) {
         console.error('Error deleting game:', error);
