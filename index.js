@@ -4,6 +4,7 @@ const { node1, node2, node3 } = require('./config/databases');
 const { insertGame, updateGame, deleteGame } = require('./models/replicator');
 
 const {synchronizeLogs } = require('./models/synchronizer');
+const { logAction, updateNodeStatus, processRetryQueue, replicateData } = require('./models/helpers');
 
 // Initialize Express app
 const app = express();
@@ -16,10 +17,14 @@ app.set('view engine', 'ejs');
 console.log(updateGame);
 
 console.log(synchronizeLogs);
+
+
 // Home route that renders the index.ejs page
 // Home route that renders the index.ejs page
 app.get('/', async (req, res) => {
     try {
+        await processRetryQueue(node1, 'node1', 'query_log_node2');
+        await processRetryQueue(node1, 'node1', 'query_log_node3');
         await synchronizeLogs();
         const itemsPerPage = 100;
         const currentPage = parseInt(req.query.page) || 1;
@@ -87,7 +92,12 @@ app.post('/addGame', async (req, res) => {
         const gameData = {name, release_date_year, price, windows, mac, linux, metacritic_score };
         await insertGame(gameData);
 
-        await synchronizeLogs();
+        try {
+            await synchronizeLogs();
+        } catch (error) {
+            console.error('Error during synchronization:', error.message);
+            return res.status(500).send('Error during synchronization: ' + error.message);
+        }
 
         res.status(200).send({ message: 'Game added successfully' });
     } catch (error) {
@@ -118,7 +128,12 @@ app.post('/updateGame', async (req, res) => {
     try {
         const gameData = req.body;
         await updateGame(gameData);
-        await synchronizeLogs();
+        try {
+            await synchronizeLogs();
+        } catch (error) {
+            console.error('Error during synchronization:', error.message);
+            return res.status(500).send('Error during synchronization: ' + error.message);
+        }
         res.status(200).send('Game updated successfully');
     } catch (error) {
         res.status(500).send('Error updating game: ' + error.message);
@@ -138,7 +153,12 @@ app.get('/deleteGame/:id', async (req, res) => {
         console.log(`Deleting game with app_id: ${app_id} and year ${release_year}`);
 
         await deleteGame(app_id, release_year);
-        await synchronizeLogs();
+        try {
+            await synchronizeLogs();
+        } catch (error) {
+            console.error('Error during synchronization:', error.message);
+            return res.status(500).send('Error during synchronization: ' + error.message);
+        }
         res.status(200).send({ message: 'Game successfully deleted' });
     } catch (error) {
         console.error('Error deleting game:', error);
