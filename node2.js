@@ -123,7 +123,7 @@ app.get('/editGame', async (req, res) => {
         if (!game) {
             return res.status(404).send('Game not found');
         }
-        res.render('editGame', { game: game[0] });
+        res.render('editgame', { game: game[0] });
     } catch (error) {
         console.error('Error fetching game for editing:', error);
         res.status(500).send('Server error');
