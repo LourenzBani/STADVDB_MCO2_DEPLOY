@@ -11,6 +11,7 @@ async function setIsolationLevel(connection, level) {
 
 // Helper function to perform the action on the corresponding node
 async function performAction(action, log) {
+    await sleep(10000);
     const { app_id, name, release_date_year, price, windows, mac, linux, metacritic_score} = log;
 
     let connection;
@@ -131,7 +132,7 @@ async function performAction(action, log) {
         // Update the logs table in the corresponding node
         //await syncLogsTable(action, log, connection, 'query_log');
 
-        await sleep(10000); 
+ 
         // Commit the transaction if all operations succeed
         await connection.commit();
         console.log(`Action ${action} for app_id ${app_id} successfully committed.`);

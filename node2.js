@@ -117,9 +117,11 @@ app.get('/editGame', async (req, res) => {
     const connection = await node2.getConnection();
     try {
         const gameId = req.query.id;
-        await setIsolationLevel(connection, 'READ UNCOMMITTED');
+        await setIsolationLevel(connection, 'READ COMMITTED');
+        //await sleep(5000);
         await connection.beginTransaction();
         const [game] = await node2.query('SELECT * FROM games WHERE app_id = ?', [gameId]);
+        await connection.commit();
         if (!game) {
             return res.status(404).send('Game not found');
         }
